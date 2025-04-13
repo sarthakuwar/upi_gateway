@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { ShoppingCart, Package } from "lucide-react";
+import { ShoppingBag, Search } from "lucide-react";
 import { products } from "./data/products";
 import PaymentModal from "./components/PaymentModal";
 import Cart from "./components/Cart";
 import { upiClient } from "./utils/upigateway";
+import { createRequestResponse } from "upigateway";
 
 // Define the CartItem interface
 interface CartItem {
@@ -19,7 +20,8 @@ function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [response, setResponse] = useState({});
+  const [response, setResponse] = useState<createRequestResponse>();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const addToCart = (product: (typeof products)[0]) => {
     setCart((prevCart) => {
@@ -65,6 +67,12 @@ function App() {
   // Get total number of items (sum of quantities)
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   async function handleCheckout() {
     setIsCartOpen(false);
 
@@ -85,61 +93,110 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b border-gray-200 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Package className="w-6 h-6" />
-            <span className="font-semibold text-xl">Store</span>
+      <header className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5" />
+              <span className="font-medium text-lg">Minimal Store</span>
+            </div>
+            
+            <div className="hidden md:flex items-center relative flex-1 max-w-md mx-8">
+              <div className="absolute left-3 text-gray-400">
+                <Search className="w-4 h-4" />
+              </div>
+              <input 
+                type="text" 
+                placeholder="Search products..." 
+                className="w-full py-2 pl-10 pr-4 bg-gray-100 border-none rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {totalItems}
+                </span>
+              )}
+            </button>
           </div>
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-2 hover:bg-gray-100 rounded-full"
-          >
-            <ShoppingCart className="w-6 h-6" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                {totalItems}
-              </span>
-            )}
-          </button>
         </div>
       </header>
 
+      {/* Search for mobile */}
+      <div className="md:hidden bg-white px-6 pb-4">
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <Search className="w-4 h-4" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Search products..." 
+            className="w-full py-2 pl-10 pr-4 bg-gray-100 border-none rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto py-12 px-6">
-        <h1 className="text-3xl font-bold mb-8">Featured Products</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-64 object-cover"
-              />
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
-                <p className="text-gray-600 mb-4">{product.description}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold">
-                    ₹{product.price.toFixed(2)}
-                  </span>
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-                  >
-                    Add to Cart
-                  </button>
+      <main className="max-w-6xl mx-auto py-8 px-6">
+        <h1 className="text-2xl font-medium mb-8">Featured Products</h1>
+        
+        {filteredProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-gray-500 mb-2">No products found</p>
+            <p className="text-gray-400 text-sm">Try a different search term</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <div
+                key={product.id}
+                className="bg-white rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-5">
+                  <h2 className="text-lg font-medium mb-1">{product.name}</h2>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold">
+                      ₹{product.price.toFixed(2)}
+                    </span>
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white mt-12 py-8 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto px-6 text-center text-gray-500 text-sm">
+          <p>© 2025 Minimal Store. All rights reserved.</p>
+        </div>
+      </footer>
 
       {/* Cart Sidebar */}
       <Cart

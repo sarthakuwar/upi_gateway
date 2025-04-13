@@ -18,8 +18,8 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       upigateway:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@eslint/js':
         specifier: ^9.9.1
@@ -1373,8 +1373,8 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
-  upigateway@1.0.0:
-    resolution: {integrity: sha512-u1FFmTM++XFIrtKhvn9Zxecl80FhiD+rUlKNqMCoytAa6+9A0g7RqAGrW5K6XJMrRXIeJC8xrcKY+gOOXOvj0w==}
+  upigateway@1.0.1:
+    resolution: {integrity: sha512-XhZwIdXM/JhqKX09UzGYiEhuEHoJDzOE1bYlgoUPMivS28ebaeoRIYbTyEuMaTWGScFBnfLAv2PrNS0Nu75s4Q==}
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -2717,7 +2717,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  upigateway@1.0.0:
+  upigateway@1.0.1:
     dependencies:
       axios: 1.8.4
     transitivePeerDependencies:
