@@ -1,25 +1,69 @@
 import React, { useState } from "react";
-import { ShoppingCart, X, Package } from "lucide-react";
+import { ShoppingCart, Package } from "lucide-react";
 import { products } from "./data/products";
 import PaymentModal from "./components/PaymentModal";
 import Cart from "./components/Cart";
 import { upiClient } from "./utils/upigateway";
 
+// Define the CartItem interface
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+  quantity: number;
+}
+
 function App() {
-  const [cart, setCart] = useState<typeof products>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [response, setResponse] = useState({});
 
   const addToCart = (product: (typeof products)[0]) => {
-    setCart([...cart, product]);
+    setCart((prevCart) => {
+      // Check if the item is already in the cart
+      const existingItemIndex = prevCart.findIndex(item => item.id === product.id);
+      
+      if (existingItemIndex !== -1) {
+        // If item exists, increase its quantity
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + 1
+        };
+        return updatedCart;
+      } else {
+        // If item doesn't exist, add it with quantity 1
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
+  };
+
+  const updateQuantity = (productId: number, newQuantity: number) => {
+    if (newQuantity <= 0) return;
+    
+    setCart((prevCart) => 
+      prevCart.map(item => 
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      )
+    );
   };
 
   const removeFromCart = (productId: number) => {
     setCart(cart.filter((item) => item.id !== productId));
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  // Calculate total based on price * quantity
+  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  // Get total number of items (sum of quantities)
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   async function handleCheckout() {
     setIsCartOpen(false);
@@ -30,10 +74,15 @@ function App() {
 
     setResponse(responsex);
 
-    if (response) {
+    if (responsex) {
       setIsPaymentModalOpen(true);
     }
   }
+
+  // Handle successful payment
+  const handlePaymentSuccess = () => {
+    clearCart();
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -49,9 +98,9 @@ function App() {
             className="relative p-2 hover:bg-gray-100 rounded-full"
           >
             <ShoppingCart className="w-6 h-6" />
-            {cart.length > 0 && (
+            {totalItems > 0 && (
               <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                {cart.length}
+                {totalItems}
               </span>
             )}
           </button>
@@ -97,6 +146,7 @@ function App() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cart={cart}
+        updateQuantity={updateQuantity}
         removeFromCart={removeFromCart}
         total={total}
         onCheckout={handleCheckout}
@@ -108,6 +158,7 @@ function App() {
         onClose={() => setIsPaymentModalOpen(false)}
         total={total}
         data={response}
+        onPaymentSuccess={handlePaymentSuccess}
       />
     </div>
   );

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { X, Check, Star } from "lucide-react";
+import { X, Check } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   total: number;
   data: object;
+  onPaymentSuccess: () => void; // New prop to notify parent of successful payment
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -13,6 +14,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   total,
   data,
+  onPaymentSuccess, // Add this new prop
 }) => {
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "success">(
     "pending",
@@ -42,6 +44,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           // Check if the data indicates success (assuming [1] means success)
           if (parsedData.includes(1)) {
             setPaymentStatus("success");
+            onPaymentSuccess(); // Call the callback to notify parent of successful payment
           }
         } catch (error) {
           console.log("Error parsing update data:", error);
@@ -62,7 +65,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         sse.close();
       };
     }
-  }, [isOpen]);
+  }, [isOpen, onPaymentSuccess]);
 
   useEffect(() => {
     if (!isOpen) {

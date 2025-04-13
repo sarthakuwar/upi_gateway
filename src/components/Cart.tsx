@@ -1,11 +1,22 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Plus, Minus } from 'lucide-react';
 import { products } from '../data/products';
+
+// New interface for cart items with quantity
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+  quantity: number;
+}
 
 interface CartProps {
   isOpen: boolean;
   onClose: () => void;
-  cart: typeof products;
+  cart: CartItem[];
+  updateQuantity: (id: number, quantity: number) => void;
   removeFromCart: (id: number) => void;
   total: number;
   onCheckout: () => void;
@@ -15,6 +26,7 @@ const Cart: React.FC<CartProps> = ({
   isOpen,
   onClose,
   cart,
+  updateQuantity,
   removeFromCart,
   total,
   onCheckout,
@@ -55,6 +67,24 @@ const Cart: React.FC<CartProps> = ({
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="text-gray-600">₹{item.price.toFixed(2)}</p>
+                      
+                      {/* Quantity controls */}
+                      <div className="flex items-center mt-2">
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                          className="p-1 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="mx-3 font-medium">{item.quantity}</span>
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="p-1 border border-gray-300 rounded hover:bg-gray-100"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <button
                       onClick={() => removeFromCart(item.id)}
